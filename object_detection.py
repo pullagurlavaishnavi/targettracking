@@ -47,11 +47,24 @@ class ObjectDetector:
             # knnMatch finds k=2 nearest neighbors for each descriptor
             raw_matches = self.matcher.knnMatch(desc1, desc2, k=2)
             
-            # Apply ratio test
-            matches = []
-            for m, n in raw_matches:
-                if m.distance < 0.75 * n.distance:  # Ratio test threshold
-                    matches.append(m)
+            print(f"[match_features] knnMatch returned {len(raw_matches)} raw pairs.")
+            
+            good_matches = []
+            # Define ratio_thresh before using it
+            ratio_thresh = 0.75 # Lowe's ratio threshold
+            print(f"[match_features] Applying ratio test (threshold {ratio_thresh})...")
+            for i, pair in enumerate(raw_matches):
+                # Check if the pair contains exactly 2 matches before unpacking
+                if len(pair) == 2:
+                    m, n = pair
+                    if m.distance < 0.75 * n.distance:
+                        good_matches.append(m)
+                # Optional: Log if not 2 neighbors
+                # else:
+                #    print(f"[match_features] WARNING: Raw match pair {i} had {len(pair)} neighbors. Skipping ratio test.")
+            
+            matches = good_matches
+            print(f"[match_features] OK: Found {len(matches)} good matches after ratio test.")
         else:
             # For ORB, just use regular matching with crossCheck
             matches = self.matcher.match(desc1, desc2)
